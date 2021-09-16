@@ -21,7 +21,7 @@ git commit -m "erster Commit. Richte mich ein."
 git push origin main
 ```
 
-# Session 20210909
+# Part 1
 ## Lesson 1.4 CRISP-DM
 <img src="images/CRISPDM.jpg" width="300" />  
 
@@ -49,3 +49,4 @@ jupyter kernelspec list
 jupyter notebook --port 8888
 ```
 
+# Part 2 ML For regression
