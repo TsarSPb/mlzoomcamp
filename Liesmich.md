@@ -4,12 +4,13 @@
 [Slack channel](https://datatalks-club.slack.com)  
 [Youtube ML Zoomcamp](https://www.youtube.com/channel/UCDvErgK0j5ur3aLgn6U-LqQ)  
 
-# Preparing the environment
+# Preparing the environment in Windows
 ```
 python -m pip install --upgrade pip
 python -m venv d:\opt\python_environments\mlzoomcamp
 d:\opt\python_environments\mlzoomcamp\Scripts\Activate.ps1
-pip install numpy pandas scikit-learn seaborn jupyter
+pip install numpy pandas scikit-learn seaborn jupyter tqdm flask requests gunicorn
+ipython kernel install --name "mlzoomcamp" --user
 git config --list --show-origin
 git init .
 git remote add origin https://github.com/TsarSPb/mlzoomcamp.git
@@ -20,6 +21,15 @@ git add .
 git commit -m "erster Commit. Richte mich ein."
 git push origin main
 ```
+
+# Preparing the environment in Linux (WSL)
+sudo apt install python3-venv
+python3 -m venv /mnt/d/python_environments/mlzoomcamp_linux
+cd /mnt/d/python_environments/mlzoomcamp_linux/
+source bin/activate
+python -m pip install --upgrade pip
+pip install numpy pandas scikit-learn seaborn jupyter tqdm flask requests gunicorn
+ipython kernel install --name "mlzoomcamp" --user
 
 # Part 1
 ## Lesson 1.4 CRISP-DM
@@ -50,3 +60,135 @@ jupyter notebook --port 8888
 ```
 
 # Part 2 ML For regression
+
+# Part 5 Deployment
+## Some basic stuff with Jupyter
+Did some tests with the `LearnTest.ipynb`  
+- created model
+- saved / pickled it into `.pkl` file
+- loaded and did predictions
+
+## Basic stuff in console
+Then converted into usable `.py` files - `train.py` and `predict.py`  
+```
+python train.py
+> Trining model...
+> Writing model...
+python predict.py
+> Input:  {'seniority': 14, 'home': 'parents', 'time': 24, 'age': 19, 'marital': 'single', 'records': 'no', 'job': 'fixed', 'expenses': 35, 'income': 28, 'assets': 0, 'debt': 0, 'amount': 400, 'price': 600}
+> Churn prediction:  0.1475997638160077
+```
+
+## Flask 1
+A very simple `Flask` app
+```
+python ping.py
+ * Serving Flask app 'ping' (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 103-155-887
+ * Running on all addresses.
+   WARNING: This is a development server. Do not use it in a production deployment.
+ * Running on http://192.168.1.133:9696/ (Press CTRL+C to quit)
+ ```
+ You can now access the app by http get. http post won't work because we haven't enabled it.
+ ```
+ curl 127.0.0.1:9696/ping
+ curl DESKTOP-80THIFC:9696/ping
+ ip -4 address
+ curl 172.19.64.100:9696/ping
+ curl 192.168.1.133:9696/ping
+> PONG
+curl -X POST 192.168.1.133:9696/ping
+> <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+> <title>405 Method Not Allowed</title>
+> <h1>Method Not Allowed</h1>
+> <p>The method is not allowed for the requested URL.</p>
+```
+Logs:
+```
+192.168.1.133 - - [09/Oct/2021 16:53:53] "GET / HTTP/1.1" 404 -
+192.168.1.133 - - [09/Oct/2021 16:53:57] "GET /ping HTTP/1.1" 200 -
+192.168.1.133 - - [09/Oct/2021 16:55:02] "POST /ping HTTP/1.1" 405 -
+```
+
+## Flask 2
+Start `Flask` server with `python predict_flask.py`
+Test the service
+```
+python predict_flask_test.py
+> Churn is False, no need to do anything...
+```
+Using `curl`
+With standalone data file
+```
+curl -d "@data.json" -H "Content-Type: application/json" -X POST 192.168.1.133:9696/predict
+{
+>   "churn": false,
+>   "churn_probability": 0.1475997638160077
+> }
+```
+Supplying data in command line
+```
+curl -d "{\"seniority\":14,\"home\":\"parents\",\"time\":24,\"age\":19,\"marital\":\"single\",\"records\":\"no\",\"job\":\"fixed\",\"expenses\":35,\"income\":28,\"assets\":0,\"debt\":0,\"amount\":400,\"price\":600}" -H "Content-Type: application/json" -X POST 192.168.1.133:9696/predict
+> {
+>   "churn": false,
+>   "churn_probability": 0.1475997638160077
+> }
+```
+
+## Gunicorn
+`Gunicorn` is supposed to be production-ready, while `Flask` is not?
+```
+gunicorn --bind 0.0.0.0:9696 predict:app
+gunicorn --bind 0.0.0.0:9696 predict_flask:app
+```
+
+## Pipenv
+```
+apt install python3-pip
+pip install pipenv
+```
+One can get `The scripts pipenv and pipenv-resolver are installed in '/home/tsar/.local/bin' which is not on PATH.` message.  
+This is likely due to the folder `~/.local/bin` was created by the installer and wasn't available before. Normally `~/.profile` already has the required block
+```
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+```
+Just execute `source ~/.profile` then.  
+If the block ins't there yes, add it and execute `source ~/.profile`.
+
+Next, install the new environment.
+```
+pipenv install numpy scikit-learn flask
+> ✔ Successfully created virtual environment!
+> Virtualenv location: /home/tsar/.local/share/virtualenvs/part05-iUPvD6hU
+```
+Two files get added to the project: `Pipfile` and `Pipfile.lock`.
+`Pipfile` contains information about the specified packages, it's like metadata for the environment.  
+`Pipfile.locl` contains exact versions and hashes for the required modules and dependencies.  
+After cloning the project / copying the files, one can just do `pipenv install`.  
+Now enter the shell and run the app.
+```
+which python3
+> /usr/bin/python3
+pipenv shell
+which python
+> /home/tsar/.local/share/virtualenvs/part05-iUPvD6hU/bin/python
+which gunicorn
+> /home/tsar/.local/share/virtualenvs/part05-iUPvD6hU/bin/gunicorn
+gunicorn --bind 0.0.0.0:9696 predict_flask:app
+```
+App should be up and running, one can test it manually or using `.py` we wrote earlier
+```
+curl http://127.0.0.1:9696/ping
+> PONG
+python3 predict_flask_test.py
+> Churn is False, no need to do anything...
+```
