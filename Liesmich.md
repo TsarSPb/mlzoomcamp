@@ -192,3 +192,32 @@ curl http://127.0.0.1:9696/ping
 python3 predict_flask_test.py
 > Churn is False, no need to do anything...
 ```
+
+## Docker
+```
+> Just running a container
+docker run -it --rm python:3.8.12-slim
+```
+A refresher on `ENTRYPOINT` vs `CMD`...  
+> `CMD` can be totally overriden, while for `ENTRYPOINT` normally one can only override params of the command.  
+> For `3.8.12-slim` we have CMD ["python3"]  
+> Running `docker run -it --rm python:3.8.12-slim sh` will start the container with `bash` instead of `python`.  
+> Instead of running `docker run redisimg redis -H something -u toto get key` one can have `ENTRYPOINT ["redis", "-H", "something", "-u", "toto"]`  
+> And just run `docker run redisimg get key`  
+> Using `docker run --entrypoint hostname demo` allows overriding `ENTRYPOINT` too  
+> `CMD` and `ENTRYPOINT` can be used together too  
+> ```
+> ENTRYPOINT ["/bin/ping","-c","3"]  
+> CMD ["localhost"]  
+> ```
+
+Building the app  
+```
+> Building image
+docker build -t zoomcamp-test
+> Checking layers
+docker history zoomcamp-test
+> Running a container
+docker run -it --rm zoomcamp-test bash
+docker run --rm -p 9696:9696 zoomcamp-test
+```
