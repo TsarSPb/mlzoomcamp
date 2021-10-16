@@ -9,7 +9,7 @@
 python -m pip install --upgrade pip
 python -m venv d:\opt\python_environments\mlzoomcamp
 d:\opt\python_environments\mlzoomcamp\Scripts\Activate.ps1
-pip install numpy pandas scikit-learn seaborn jupyter tqdm flask requests gunicorn
+pip install numpy pandas scikit-learn seaborn jupyter tqdm flask requests gunicorn xgboost
 ipython kernel install --name "mlzoomcamp" --user
 git config --list --show-origin
 git init .
@@ -23,13 +23,15 @@ git push origin main
 ```
 
 # Preparing the environment in Linux (WSL)
+```
 sudo apt install python3-venv
 python3 -m venv /mnt/d/python_environments/mlzoomcamp_linux
 cd /mnt/d/python_environments/mlzoomcamp_linux/
 source bin/activate
 python -m pip install --upgrade pip
-pip install numpy pandas scikit-learn seaborn jupyter tqdm flask requests gunicorn
+pip install numpy pandas scikit-learn seaborn jupyter tqdm flask requests gunicorn xgboost
 ipython kernel install --name "mlzoomcamp" --user
+```
 
 # Part 1
 ## Lesson 1.4 CRISP-DM
